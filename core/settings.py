@@ -19,3 +19,6 @@ SQL_PASSWORD = os.environ.get('SQL_PASSWORD')
 SQL_HOST = os.environ.get('SQL_HOST')
 SQL_PORT = os.environ.get('SQL_PORT')
 SQL_DATABASE = os.environ.get('SQL_DATABASE')
+
+
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
