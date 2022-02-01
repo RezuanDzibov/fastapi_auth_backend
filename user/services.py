@@ -1,8 +1,9 @@
 from fastapi.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import or_, select, insert
+from sqlalchemy.orm import Load
 
-from auth.security import get_password_hash
+from auth.security import get_password_hash, verify_password
 from base.crud_utils import object_exists
 from user.schemas import UserRegistrationIn
 from user.models import User
@@ -21,3 +22,15 @@ async def create_user(session: AsyncSession, new_user: UserRegistrationIn):
     statement = insert(User).values(**new_user.dict()).returning('*')
     await session.execute(statement)
     await session.commit()
+
+
+async def authenticate(session: AsyncSession, username: str, password: str):
+    statement = select(User).options(
+        Load(User).load_only(User.password, User.is_active)
+    )
+    statement = statement.where(User.username == username)
+    result = await session.execute(statement)
+    user = result.scalar()
+    if not verify_password(password, user.password):
+        raise HTTPException(status_code=400, detail='Provided password is incorrect')
+    return user
