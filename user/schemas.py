@@ -1,4 +1,4 @@
-from pydantic import BaseModel, constr, EmailStr, PastDate, UUID4
+from pydantic import BaseModel, constr, EmailStr, PastDate
 
 
 class UserRegistrationIn(BaseModel):
@@ -11,10 +11,3 @@ class UserRegistrationIn(BaseModel):
 
     class Config:
         mutable = True
-
-
-class UserRegistrationOut(UserRegistrationIn):
-    id: UUID4
-    is_active: bool
-    is_staff: bool
-    is_superuser: bool
