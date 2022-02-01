@@ -5,6 +5,7 @@ from sqlalchemy.orm import Load
 
 from auth.security import get_password_hash, verify_password
 from base.crud_utils import object_exists
+from core.db import async_session_maker
 from user.schemas import UserRegistrationIn
 from user.models import User
 
@@ -34,3 +35,11 @@ async def authenticate(session: AsyncSession, username: str, password: str):
     if not verify_password(password, user.password):
         raise HTTPException(status_code=400, detail='Provided password is incorrect')
     return user
+
+
+async def get_user_by_id(user_id):
+    async with async_session_maker() as session:
+        statement = select(User).where(User.id == user_id)
+        result = await session.execute(statement)
+        user = result.scalar()
+        return user
