@@ -30,7 +30,7 @@ async def user_access_token(form_data: OAuth2PasswordRequestForm = Depends(), se
     return create_token(user.id.hex)
 
 
-@auth_router.post('/confirm-email/{verification_uuid}', response_model=Message)
+@auth_router.get('/confirm-email/{verification_uuid}', response_model=Message)
 async def confirm_email(verification_uuid: UUID, session: AsyncSession = Depends(get_session)):
     await auth_services.verify_registration_user(session=session, verification_uuid=verification_uuid)
     return Message(message='Success verify email')
