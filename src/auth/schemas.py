@@ -8,3 +8,7 @@ class Token(BaseModel):
 
 class TokenPayload(BaseModel):
     user_id: UUID4 = None
+
+
+class Message(BaseModel):
+    message: str
