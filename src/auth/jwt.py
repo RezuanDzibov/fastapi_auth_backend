@@ -1,7 +1,7 @@
 import jwt
 from datetime import datetime, timedelta
 
-from core import settings
+from config import settings
 
 ALGORITHM = 'HS256'
 access_token_jwt_subject = 'access'

@@ -2,8 +2,8 @@ from datetime import datetime
 
 from sqlalchemy import Column, String, DATE, DateTime, Boolean
 
-from base.models import UUIDMixin
-from core.db import Base
+from src.base.models import UUIDMixin
+from src.core import Base
 
 
 class User(UUIDMixin, Base):
