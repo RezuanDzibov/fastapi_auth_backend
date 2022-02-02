@@ -5,9 +5,10 @@ from starlette.background import BackgroundTasks
 
 from src.auth.jwt import create_token
 from src.auth.schemas import Token, Message
-from src.core.db import get_session
+from src.models.db import get_session
 from src.user.schemas import UserRegistrationIn
 from src.user import services
+
 
 auth_router = APIRouter()
 

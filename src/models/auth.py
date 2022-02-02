@@ -2,9 +2,9 @@ from sqlalchemy import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, backref
 
-from src.base.models import UUIDMixin
-from src.core.db import Base
-from src.user.models import User
+from src.models.base import UUIDMixin
+from src.models.db import Base
+from src.models.user import User
 
 
 class Verification(UUIDMixin, Base):

@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from starlette.status import HTTP_403_FORBIDDEN
 
 from config import settings
-from src.user.models import User
+from src.models.user import User
 from src.auth.jwt import ALGORITHM
 from src.auth.schemas import TokenPayload
 from src.user.services import get_user_by_id
