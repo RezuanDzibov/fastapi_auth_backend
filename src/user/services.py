@@ -5,7 +5,7 @@ from sqlalchemy.orm import Load
 
 from src.auth.security import get_password_hash, verify_password
 from src.base.crud_utils import object_exists
-from src.core import async_session_maker
+from src.core.db import async_session_maker
 from src.user.schemas import UserRegistrationIn
 from src.user.models import User
 
