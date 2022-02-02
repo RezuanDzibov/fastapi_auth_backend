@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 PROJECT_NAME = 'Auth Backend'
+SERVER_HOST = os.environ.get("SERVER_HOST")
 
 dotenv_path = Path(f"{BASE_DIR}/.env")
 load_dotenv(dotenv_path=dotenv_path)
