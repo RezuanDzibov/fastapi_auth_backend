@@ -1,24 +1,17 @@
-from pathlib import Path
-
 from config import settings
 from src.base.utils.email import send_email
 
 
 def send_new_account_email(email_to: str, username: str, password: str, uuid: str):
-    project_name = settings.PROJECT_NAME
-    subject = f'{project_name} - New account for user {username}'
-    with open(Path(settings.EMAIL_TEMPLATES_DIR) / 'new_account.html') as f:
-        template_str = f.read()
-    link = f'{settings.SERVER_HOST}/verify/?token={uuid}'
+    verification_link = f'http://{settings.SERVER_HOST}/verify/?token={uuid}'
     send_email(
         email_to=email_to,
-        subject_template=subject,
-        html_template=template_str,
+        template_name='new_account.html',
         environment={
             'project_name': settings.PROJECT_NAME,
             'username': username,
             'password': password,
             'email': email_to,
-            'link': link,
+            'link': verification_link,
         },
     )

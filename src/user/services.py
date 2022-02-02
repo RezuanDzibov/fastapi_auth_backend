@@ -2,15 +2,18 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import or_, select, insert
 from sqlalchemy.orm import Load
+from starlette.background import BackgroundTasks
 
 from src.auth.security import get_password_hash, verify_password
+from src.auth.send_email import send_new_account_email
+from src.auth.services import create_verification
 from src.base.crud_utils import object_exists
 from src.core.db import async_session_maker
 from src.user.schemas import UserRegistrationIn
 from src.user.models import User
 
 
-async def create_user(session: AsyncSession, new_user: UserRegistrationIn):
+async def create_user(session: AsyncSession, new_user: UserRegistrationIn, task: BackgroundTasks):
     statement = select(User).where(or_(User.username == new_user.username, User.email == new_user.email))
     is_object_exists = await object_exists(session=session, statement=statement)
     if is_object_exists:
@@ -18,11 +21,17 @@ async def create_user(session: AsyncSession, new_user: UserRegistrationIn):
             status_code=409,
             detail=f'User with username: {new_user.username} or email: {new_user.email} exists'
         )
-    hash_password = get_password_hash(new_user.dict().pop('password'))
+    raw_password = new_user.dict().pop('password')
+    hash_password = get_password_hash(raw_password)
     new_user.password = hash_password
-    statement = insert(User).values(**new_user.dict()).returning('*')
-    await session.execute(statement)
+    statement = insert(User).values(**new_user.dict()).returning(User.id)
+    result = await session.execute(statement)
     await session.commit()
+    user_id = result.scalar()
+    verification_id = await create_verification(session=session, user_id=str(user_id))
+    task.add_task(
+        send_new_account_email, new_user.email, new_user.username, raw_password, verification_id
+    )
 
 
 async def authenticate(session: AsyncSession, username: str, password: str):

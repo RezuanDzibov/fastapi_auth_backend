@@ -1,26 +1,31 @@
-import logging
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from smtplib import SMTP
 
-import emails
-from emails.template import JinjaTemplate
+from jinja2 import Environment, FileSystemLoader
 
 from config import settings
+
 
 password_reset_jwt_subject = 'preset'
 
 
-def send_email(email_to: str, subject_template='', html_template='', environment={}):
-    assert settings.EMAILS_ENABLED, 'no provided configuration for email variables'
-    message = emails.Message(
-        subject=JinjaTemplate(subject_template),
-        html=JinjaTemplate(html_template),
-        mail_from=(settings.EMAILS_FROM_NAME, settings.EMAILS_FROM_EMAIL),
-    )
-    smtp_options = {'host': settings.SMTP_HOST, 'port': settings.SMTP_PORT}
-    if settings.SMTP_TLS:
-        smtp_options['tls'] = True
-    if settings.SMTP_USER:
-        smtp_options['user'] = settings.SMTP_USER
-    if settings.SMTP_PASSWORD:
-        smtp_options['password'] = settings.SMTP_PASSWORD
-    response = message.send(to=email_to, render=environment, smtp=smtp_options)
-    logging.info(f'send email result: {response}')
+def send_email(email_to: str, template_name: str, environment: dict):
+    env = Environment(loader=FileSystemLoader(settings.EMAIL_TEMPLATES_DIR))
+    template = env.get_template(template_name)
+    output = template.render(environment)
+
+    from_email = settings.SMTP_USER
+    subject = 'A new account email!'
+    message = MIMEMultipart()
+    message['Subject'] = subject
+    message['From'] = from_email
+    message['To'] = email_to
+
+    message.attach(MIMEText(output, 'html'))
+    message_body = message.as_string()
+
+    with SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as smtp_server:
+        smtp_server.starttls()
+        smtp_server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+        smtp_server.sendmail(from_email, email_to, message_body)
