@@ -48,9 +48,9 @@ async def authenticate(session: AsyncSession, username: str, password: str):
     return user
 
 
-async def get_user_by_id(user_id):
+async def get_user(session: AsyncSession, where_statements: list):
     async with async_session_maker() as session:
-        statement = select(User).where(User.id == user_id)
+        statement = select(User).where(*where_statements)
         result = await session.execute(statement)
         user = result.scalar()
         return user

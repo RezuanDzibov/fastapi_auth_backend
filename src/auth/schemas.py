@@ -7,7 +7,7 @@ class Token(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    user_id: UUID4 = None
+    user_id: UUID4
 
 
 class Message(BaseModel):

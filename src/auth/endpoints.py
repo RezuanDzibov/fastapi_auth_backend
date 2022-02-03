@@ -8,7 +8,9 @@ from starlette.background import BackgroundTasks
 from src.auth.jwt import create_token
 from src.auth.schemas import Token, Message
 from src.auth import services as auth_services
+from src.auth.permissions import get_current_user
 from src.models.db import get_session
+from src.models.user import User
 from src.user.schemas import UserRegistrationIn
 from src.user import services
 
