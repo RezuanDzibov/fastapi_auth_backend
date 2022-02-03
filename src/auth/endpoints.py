@@ -1,12 +1,11 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.background import BackgroundTasks
 
 from src.auth.jwt import create_token
-from src.auth.schemas import Token, Message
+from src.auth.schemas import Token, Message, OAuth2TokenRequestForm
 from src.auth import services as auth_services
 from src.models.db import get_session
 from src.user.schemas import UserRegistrationIn
@@ -23,8 +22,8 @@ async def user_registration(new_user: UserRegistrationIn, task: BackgroundTasks,
 
 
 @auth_router.post('/login/access-token', response_model=Token)
-async def user_access_token(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_session)):
-    user = await auth_services.authenticate(session=session, username=form_data.username, password=form_data.password)
+async def user_access_token(form_data: OAuth2TokenRequestForm = Depends(OAuth2TokenRequestForm.as_form), session: AsyncSession = Depends(get_session)):
+    user = await auth_services.authenticate(session=session, login=form_data.login, password=form_data.password)
     if not user.is_active:
         raise HTTPException(status_code=400, detail='Inactive user')
     return create_token(user.id.hex)
