@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from fastapi.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import or_, select, insert, update
