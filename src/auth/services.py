@@ -5,6 +5,7 @@ from sqlalchemy import insert, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.auth import Verification
+from src.models.user import User
 from src.user import services as user_services
 
 
@@ -21,7 +22,7 @@ async def verify_registration_user(session: AsyncSession, verification_uuid: UUI
     result = await session.execute(statement)
     verification = result.scalar()
     if verification:
-        await user_services.update_user(session=session, user_id=verification.user_id, to_update={'is_active': True})
+        await user_services.update_user(session=session, where_statements=[User.id == verification.user_id], to_update={'is_active': True})
         statement = delete(Verification).where(Verification.id == verification_uuid)
         await session.execute(statement)
         await session.commit()

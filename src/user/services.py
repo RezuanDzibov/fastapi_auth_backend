@@ -56,7 +56,7 @@ async def get_user(session: AsyncSession, where_statements: list):
         return user
 
 
-async def update_user(session: AsyncSession, user_id: UUID, to_update: dict):
-    statement = update(User).where(User.id == user_id).values(**to_update)
+async def update_user(session: AsyncSession, where_statements: list, to_update: dict):
+    statement = update(User).where(*where_statements).values(**to_update)
     await session.execute(statement)
     await session.commit()
