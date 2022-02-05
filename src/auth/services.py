@@ -2,17 +2,18 @@ from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
-from fastapi import BackgroundTasks, HTTPException
 import jwt
+from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import insert, select, delete, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Load
+
 from config import settings
 from src.auth.jwt import ALGORITHM
-
 from src.auth.security import get_password_hash, verify_password
 from src.auth.send_email import send_reset_password_email
 from src.base import crud_utils
+from src.models import user
 from src.models.auth import Verification
 from src.models.user import User
 from src.user import services as user_services
@@ -26,8 +27,7 @@ async def authenticate(session: AsyncSession, login: str, password: str):
         Load(User).load_only(User.password, User.is_active) # type: ignore
     )
     statement = statement.where(or_(User.username == login, User.email == login))
-    result = await session.execute(statement)
-    user = result.scalar()
+    user = await crud_utils.get_object(session=session, statement=statement)
     if user is None:
         raise HTTPException(status_code=404, detail=f'User with username or email: {login}. Not found.')
     if not verify_password(password, user.password):
@@ -36,26 +36,31 @@ async def authenticate(session: AsyncSession, login: str, password: str):
 
 
 async def create_verification(session: AsyncSession, user_id: str):
-    statement = insert(Verification).values(user_id=user_id).returning(Verification.id)
-    result = await session.execute(statement)
-    await session.commit()
-    verification = result.scalar()
+    verification = await crud_utils.insert_object(
+        session=session,
+        model=Verification,
+        to_insert={'user_id': user_id},
+        returning=[Verification.id]
+    )
     return verification
 
 
-async def verify_registration_user(session: AsyncSession, verification_uuid: UUID):
-    statement = select(Verification).where(Verification.id == verification_uuid)
-    result = await session.execute(statement)
-    verification = result.scalar()
+async def verify_registration_user(session: AsyncSession, verification_id: UUID):
+    statement = select(Verification).where(Verification.id == verification_id)
+    verification = await crud_utils.get_object(session=session, statement=statement)
     if verification:
         await user_services.update_user(
             session=session,
             where_statements=[User.id == verification.user_id],
-            to_update={'is_active': True}
+            to_update={'is_active': True},
+            returning=[]
         )
-        statement = delete(Verification).where(Verification.id == verification_uuid)
-        await session.execute(statement)
-        await session.commit()
+        await crud_utils.delete_object(
+            session=session,
+            model=Verification, 
+            where_statements=[Verification.id == verification_id],
+            returning=[]
+        )
     else:
         raise HTTPException(status_code=404, detail='Not found')
 
@@ -108,7 +113,7 @@ async def reset_password(session: AsyncSession, token: str, new_password: str):
     elif not user.is_active:
         raise HTTPException(status_code=400, detail='Inactive user')
     password_hash = get_password_hash(new_password)
-    await crud_utils.update_object(
+    await crud_utils.update_model_instance(
         session=session,
         object_=user,
         to_update={'password': password_hash}
