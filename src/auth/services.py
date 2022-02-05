@@ -12,6 +12,7 @@ from src.auth.jwt import ALGORITHM
 
 from src.auth.security import get_password_hash, verify_password
 from src.auth.send_email import send_reset_password_email
+from src.base import crud_utils
 from src.models.auth import Verification
 from src.models.user import User
 from src.user import services as user_services
@@ -48,8 +49,8 @@ async def verify_registration_user(session: AsyncSession, verification_uuid: UUI
     verification = result.scalar()
     if verification:
         await user_services.update_user(
-            session=session, 
-            where_statements=[User.id == verification.user_id], 
+            session=session,
+            where_statements=[User.id == verification.user_id],
             to_update={'is_active': True}
         )
         statement = delete(Verification).where(Verification.id == verification_uuid)
@@ -107,8 +108,8 @@ async def reset_password(session: AsyncSession, token: str, new_password: str):
     elif not user.is_active:
         raise HTTPException(status_code=400, detail='Inactive user')
     password_hash = get_password_hash(new_password)
-    await user_services.update_user(
-        session=session, 
-        where_statements=[User.id == user.id],
+    await crud_utils.update_object(
+        session=session,
+        object_=user,
         to_update={'password': password_hash}
     )
