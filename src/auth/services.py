@@ -68,7 +68,7 @@ async def password_recover(session: AsyncSession, task: BackgroundTasks, email: 
         )
     password_reset_token = await generate_password_reset_token(email)
     task.add_task(
-        send_reset_password_email, email_to=user.email, email=email, token=password_reset_token
+        send_reset_password_email, username=user.username, email=email, token=password_reset_token
     )
 
 
