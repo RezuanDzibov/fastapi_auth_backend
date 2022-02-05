@@ -48,3 +48,4 @@ async def reset_password(
     session: AsyncSession = Depends(get_session)
 ):
     await auth_services.reset_password(session=session, token=form.token, new_password=form.new_password)
+    return Message(message='Successful password recovery.')
