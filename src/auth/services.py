@@ -20,8 +20,8 @@ password_reset_jwt_subject = 'preset'
 
 
 async def authenticate(session: AsyncSession, login: str, password: str):
-    statement = select(User).options(
-        Load(User).load_only(User.password, User.is_active)
+    statement = select(User).options( # type: ignore
+        Load(User).load_only(User.password, User.is_active) # type: ignore
     )
     statement = statement.where(or_(User.username == login, User.email == login))
     result = await session.execute(statement)
