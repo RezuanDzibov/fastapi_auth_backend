@@ -23,7 +23,7 @@ SQL_PORT = os.environ.get('SQL_PORT')
 SQL_DATABASE = os.environ.get('SQL_DATABASE')
 
 EMAILS_FROM_NAME = PROJECT_NAME
-EMAIL_RESET_TOKEN_EXPIRE = 30
+EMAIL_RESET_TOKEN_EXPIRE = 48
 EMAIL_TEMPLATES_DIR = 'email-templates/build'
 
 SMTP_TLS = os.environ.get('SMTP_TLS')

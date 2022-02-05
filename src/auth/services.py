@@ -73,7 +73,7 @@ async def password_recover(session: AsyncSession, task: BackgroundTasks, email: 
 
 
 async def generate_password_reset_token(email: str):
-    delta = timedelta(minutes=settings.EMAIL_RESET_TOKEN_EXPIRE)
+    delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE)
     now = datetime.utcnow()
     expires = now + delta
     exp = expires.timestamp()
