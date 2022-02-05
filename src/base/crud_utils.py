@@ -16,3 +16,9 @@ async def update_object(session: AsyncSession, object_, to_update: dict):
         setattr(object_, column_name, column_value)
     session.add(object_)
     await session.commit()
+    
+    
+async def get_object(session: AsyncSession, statement):
+    result = await session.execute(statement)
+    object_ = result.scalar()
+    return object_
