@@ -31,10 +31,10 @@ def send_reset_password_email(email_to: str, email: str, token: str):
         template_name='reset_password.html',
         subject=subject,
         environment={
-            "project_name": settings.PROJECT_NAME,
-            "username": email,
-            "email": email_to,
-            "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
-            "link": recovery_link,
+            'project_name': settings.PROJECT_NAME,
+            'username': email,
+            'email': email_to,
+            'valid_hours': settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
+            'link': recovery_link,
         }
     )
