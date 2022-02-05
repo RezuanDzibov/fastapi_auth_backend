@@ -87,8 +87,23 @@ async def generate_password_reset_token(email: str):
 
 async def verify_password_reset_token(token: str) -> Optional[str]:
     try:
-        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         assert decoded_token['sub'] == password_reset_jwt_subject
         return decoded_token['email']
     except jwt.InvalidTokenError:
         return None
+    
+    
+async def reset_password(session: AsyncSession, token: str, new_password: str):
+    email = verify_password_reset_token(token)
+    if not email:
+        raise HTTPException(status_code=400, detail='Invalid token')
+    user = await user_services.get_user(session=session, where_statements=[User.email == email])
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail=f'The user with this email: {email} does not exist in the system.',
+        )
+    elif not user.is_active:
+        raise HTTPException(status_code=400, detail='Inactive user')
+    await user_services.change_password(user, new_password)
