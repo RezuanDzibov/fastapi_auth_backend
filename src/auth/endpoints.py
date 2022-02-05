@@ -1,3 +1,4 @@
+from lib2to3.pgen2 import token
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -6,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.background import BackgroundTasks
 
 from src.auth.jwt import create_token
-from src.auth.schemas import Token, Message, OAuth2TokenRequestForm
+from src.auth.schemas import Token, Message, OAuth2TokenRequestForm, PasswordResetForm
 from src.auth import services as auth_services
 from src.models.db import get_session
 from src.user.schemas import UserRegistrationIn
@@ -40,3 +41,11 @@ async def confirm_email(verification_uuid: UUID, session: AsyncSession = Depends
 async def recover_password(email: str, task: BackgroundTasks, session: AsyncSession = Depends(get_session)):
     await auth_services.password_recover(session=session, task=task, email=email)
     return Message(message='A recovery email has been sent.')
+
+
+@auth_router.post('/reset-password', response_model=Message)
+async def reset_password(
+    form: PasswordResetForm = Depends(PasswordResetForm.as_form),
+    session: AsyncSession = Depends(get_session)
+):
+    await auth_services.reset_password(session=session, token=form.token, new_password=form.new_password)

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Load
 from config import settings
 from src.auth.jwt import ALGORITHM
 
-from src.auth.security import verify_password
+from src.auth.security import get_password_hash, verify_password
 from src.auth.send_email import send_reset_password_email
 from src.models.auth import Verification
 from src.models.user import User
@@ -73,7 +73,7 @@ async def password_recover(session: AsyncSession, task: BackgroundTasks, email: 
 
 
 async def generate_password_reset_token(email: str):
-    delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
+    delta = timedelta(minutes=settings.EMAIL_RESET_TOKEN_EXPIRE)
     now = datetime.utcnow()
     expires = now + delta
     exp = expires.timestamp()
@@ -95,7 +95,7 @@ async def verify_password_reset_token(token: str) -> Optional[str]:
     
     
 async def reset_password(session: AsyncSession, token: str, new_password: str):
-    email = verify_password_reset_token(token)
+    email = await verify_password_reset_token(token)
     if not email:
         raise HTTPException(status_code=400, detail='Invalid token')
     user = await user_services.get_user(session=session, where_statements=[User.email == email])
@@ -106,8 +106,9 @@ async def reset_password(session: AsyncSession, token: str, new_password: str):
         )
     elif not user.is_active:
         raise HTTPException(status_code=400, detail='Inactive user')
+    password_hash = get_password_hash(new_password)
     await user_services.update_user(
         session=session, 
-        where_statements=[User.id == user.id], 
-        to_update={'password': new_password}
+        where_statements=[User.id == user.id],
+        to_update={'password': password_hash}
     )

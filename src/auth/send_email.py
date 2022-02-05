@@ -34,7 +34,7 @@ def send_reset_password_email(email_to: str, email: str, token: str):
             'project_name': settings.PROJECT_NAME,
             'username': email,
             'email': email_to,
-            'valid_hours': settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
+            'valid_minutes': settings.EMAIL_RESET_TOKEN_EXPIRE,
             'link': recovery_link,
         }
     )
