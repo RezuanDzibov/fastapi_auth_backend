@@ -34,11 +34,10 @@ async def create_user(session: AsyncSession, new_user: UserRegistrationIn, task:
 
 
 async def get_user(session: AsyncSession, where_statements: list):
-    async with async_session_maker() as session:
-        statement = select(User).where(*where_statements)
-        result = await session.execute(statement)
-        user = result.scalar()
-        return user
+    statement = select(User).where(*where_statements)
+    result = await session.execute(statement)
+    user = result.scalar()
+    return user
 
 
 async def update_user(session: AsyncSession, where_statements: list, to_update: dict):

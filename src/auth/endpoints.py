@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.background import BackgroundTasks
 
@@ -33,3 +34,9 @@ async def user_access_token(form_data: OAuth2TokenRequestForm = Depends(OAuth2To
 async def confirm_email(verification_uuid: UUID, session: AsyncSession = Depends(get_session)):
     await auth_services.verify_registration_user(session=session, verification_uuid=verification_uuid)
     return Message(message='Success verify email')
+
+
+@auth_router.post('/password-recovery/{email}', response_model=Message)
+async def recover_password(email: str, task: BackgroundTasks, session: AsyncSession = Depends(get_session)):
+    await auth_services.password_recover(session=session, task=task, email=email)
+    return Message(message='A recovery email has been sent.')

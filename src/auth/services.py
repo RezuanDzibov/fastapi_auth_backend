@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 import jwt
 from sqlalchemy import insert, select, delete, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +11,7 @@ from config import settings
 from src.auth.jwt import ALGORITHM
 
 from src.auth.security import verify_password
+from src.auth.send_email import send_reset_password_email
 from src.models.auth import Verification
 from src.models.user import User
 from src.user import services as user_services
@@ -56,9 +57,22 @@ async def verify_registration_user(session: AsyncSession, verification_uuid: UUI
         await session.commit()
     else:
         raise HTTPException(status_code=404, detail='Not found')
-    
-    
-def generate_password_reset_token(email: str):
+
+
+async def password_recover(session: AsyncSession, task: BackgroundTasks, email: str):
+    user = await user_services.get_user(session=session, where_statements=[User.email == email])
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail=f'The user with this email: {email} does not exist in the system.',
+        )
+    password_reset_token = await generate_password_reset_token(email)
+    task.add_task(
+        send_reset_password_email, email_to=user.email, email=email, token=password_reset_token
+    )
+
+
+async def generate_password_reset_token(email: str):
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
     now = datetime.utcnow()
     expires = now + delta
@@ -71,7 +85,7 @@ def generate_password_reset_token(email: str):
     return encoded_jwt
 
 
-def verify_password_reset_token(token: str) -> Optional[str]:
+async def verify_password_reset_token(token: str) -> Optional[str]:
     try:
         decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
         assert decoded_token['sub'] == password_reset_jwt_subject
